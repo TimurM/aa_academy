@@ -32,10 +32,11 @@ def all_teachers_join
   # even if the department in NULL/nil.
   execute(<<-SQL)
     SELECT
-      teacher.name, dept.name
+      t.name, d.name
     FROM
-      teacher
-    LEFT OUTER JOIN dept ON teacher.dept = dept.id
+      teacher t
+      LEFT OUTER JOIN dept d
+      ON (t.dept = d.id)
   SQL
 end
 
@@ -44,13 +45,12 @@ def all_depts_join
   # NB: you can avoid RIGHT OUTER JOIN (and just use LEFT) by swapping
   # the FROM and JOIN tables.
   execute(<<-SQL)
-    SELECT
-      teacher.name, dept.name
-    FROM
-      dept
-      LEFT OUTER JOIN teacher
-      ON teacher.dept = dept.id
-
+  SELECT
+    t.name, d.name
+  FROM
+    teacher t
+    RIGHT OUTER JOIN dept d
+    ON (t.dept = d.id)
 
   SQL
 end
@@ -60,10 +60,10 @@ def teachers_and_mobiles
   # 444 2266' if no number is given. Show teacher name and mobile
   # #number or '07986 444 2266'
   execute(<<-SQL)
-    SELECT
-      teacher.name, COALESCE (teacher.mobile,'07986 444 2266')
-    FROM
-      teacher
+  SELECT
+    name, COALESCE(mobile, '07986 444 2266')
+  FROM
+    teacher
 
   SQL
 end
@@ -73,12 +73,13 @@ def teachers_and_depts
   # department name. Use the string 'None' where there is no
   # department.
   execute(<<-SQL)
-    SELECT
-      teacher.name, COALESCE (dept.name,'None')
-    FROM
-      teacher
-      LEFT JOIN dept
-      ON teacher.dept = dept.id
+  SELECT
+    t.name, COALESCE(d.name, 'None')
+  FROM
+    teacher t
+    LEFT JOIN
+      dept d
+    ON (t.dept = d.id)
   SQL
 end
 
@@ -87,10 +88,10 @@ def num_teachers_and_mobiles
   # mobile phones.
   # NB: COUNT only counts non-NULL values.
   execute(<<-SQL)
-    SELECT
-      COUNT(teacher.name), COUNT(teacher.mobile)
-    FROM
-      teacher
+  SELECT
+  COUNT(t.name), COUNT(t.mobile)
+  FROM
+    teacher t
 
   SQL
 end
@@ -100,14 +101,15 @@ def dept_staff_counts
   # the number of staff. Structure your JOIN to ensure that the
   # Engineering department is listed.
   execute(<<-SQL)
-    SELECT
-      dept.name, COUNT(teacher.name)
-    FROM
-      dept
-    LEFT JOIN
-      teacher ON dept.id = teacher.dept
-    GROUP BY
-      dept.name
+  SELECT
+    d.name, COUNT(t.name)
+  FROM
+    teacher t
+    RIGHT OUTER JOIN dept d
+    ON (t.dept = d.id)
+  GROUP BY
+    d.name
+
   SQL
 end
 
@@ -115,16 +117,15 @@ def teachers_and_divisions
   # Use CASE to show the name of each teacher followed by 'Sci' if
   # the the teacher is in dept 1 or 2 and 'Art' otherwise.
   execute(<<-SQL)
-    SELECT
-      teacher.name,
-    CASE
-      teacher.dept
-    WHEN 1 THEN 'Sci'
-    WHEN 2 THEN 'Sci'
+  SELECT
+    name, CASE dept
+    WHEN 1 then 'Sci'
+    WHEN 2 then 'Sci'
+
     ELSE 'Art'
     END
-    FROM
-      teacher
+  FROM
+    teacher
   SQL
 end
 
@@ -133,16 +134,15 @@ def teachers_and_divisions_two
   # the the teacher is in dept 1 or 2, 'Art' if the dept is 3, and
   # 'None' otherwise.
   execute(<<-SQL)
-    SELECT
-      teacher.name,
-    CASE
-      teacher.dept
-    WHEN 1 THEN 'Sci'
-    WHEN 2 THEN 'Sci'
-    WHEN 3 THEN 'Art'
+  SELECT
+    name, CASE dept
+    WHEN 1 then 'Sci'
+    WHEN 2 then 'Sci'
+    WHEN 3 then 'Art'
+
     ELSE 'None'
     END
-    FROM
-      teacher
+  FROM
+    teacher
   SQL
 end
