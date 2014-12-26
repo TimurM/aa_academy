@@ -29,7 +29,7 @@ CREATE TABLE replies (
   body TEXT NOT NULL,
 
   FOREIGN KEY (parent_id) REFERENCES replies (reply_id)
-  FOREIGN KEY (question_id) REFERENCES questions(id),
+  FOREIGN KEY (question_id) REFERENCES questions(id)
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -37,7 +37,7 @@ CREATE TABLE question_likes (
   user_id INTEGER NOT NULL,
   question_id INTEGER NOT NULL,
 
-  FOREIGN KEY (question_id) REFERENCES questions(id),
+  FOREIGN KEY (question_id) REFERENCES questions(id)
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -52,6 +52,7 @@ VALUES
   ('Ruby?', 'What is Ruby?', (SELECT id FROM users WHERE fname = 'John')),
   ('SQL?', 'Why learn SQL?', (SELECT id FROM users WHERE fname = 'Timur')),
   ('Cool?', 'Is Timur cool?', (SELECT id FROM users WHERE fname = 'Kirk')),
+  ('lifee?', 'What is lifee?', (SELECT id FROM users WHERE fname = 'Kirk')),
   ('life?', 'What is life?', (SELECT id FROM users WHERE fname = 'Kirk'));
 
 INSERT INTO
@@ -68,7 +69,10 @@ VALUES
   (3, 3),
   (2, 3),
   (2, 2),
-  (3, 1);
+  (3, 1),
+  (4, 1),
+  (4, 2);
+
 
 INSERT INTO
   question_likes (user_id, question_id)
@@ -76,6 +80,8 @@ VALUES
   (1, 1),
   (1, 2),
   (1, 3),
+  (1, 4),
+  (2, 4),
   (2, 1),
   (2, 2),
-  (3, 1);
+  (3, 4);

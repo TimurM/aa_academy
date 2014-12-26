@@ -66,6 +66,40 @@ class Question
   def followers
     QuestionFollower.followers_for_question_id(id)
   end
+
+  def most_liked(n)
+    QuestionLike.most_liked_questions(n)
+  end
+
+  def attrs
+    { title: title, body: body, user_id: user_id }
+  end
+
+  def save
+    if @id
+      QuestionsDatabase.instance.execute(<<-SQL, attrs.merge({ id: id }))
+
+      UPDATE
+        questions
+      SET
+        title = :title, body = :body, user_id = :user_id
+      WHERE
+        questions.id = :id
+      SQL
+
+    else
+      QuestionsDatabase.instance.execute(<<-SQL, attrs)
+
+      INSERT INTO
+        questions (title, body, user_id)
+      VALUES
+        (:title, :body, :user_id)
+      SQL
+
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    end
+  end
+
 end
 
 class User
@@ -114,6 +148,54 @@ class User
 
   def followed_questions
     QuestionFollower.followed_questions_for_user_id(self.id)
+  end
+
+  def average_karma
+    data = QuestionsDatabase.instance.execute(<<-SQL, @id)
+    SELECT
+      CAST(COUNT(likes.user_id) AS FLOAT)/COUNT(DISTINCT(questions.id))
+    FROM
+        (SELECT
+        q.id, q.title, q.body, q.user_id
+        FROM
+        questions q
+        WHERE
+        q.user_id = ?) questions
+        LEFT OUTER JOIN
+        question_likes likes
+        ON (questions.id = likes.question_id)
+    SQL
+    data
+    # data.map {|datum| Question.new(datum) }
+  end
+
+  def attrs
+    { id: id, fname: fname, lname: lname }
+  end
+
+  def save
+    if @id
+      QuestionsDatabase.instance.execute(<<-SQL, attrs.merge({ id: id }))
+
+      UPDATE
+      users
+      SET
+      fname = :fname, lname = :lname
+      WHERE
+      users.id = :id
+      SQL
+
+    else
+      QuestionsDatabase.instance.execute(<<-SQL, attrs)
+
+      INSERT INTO
+      users (fname, lname)
+      VALUES
+      (:fname, :lname)
+      SQL
+
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    end
   end
 end
 
@@ -170,6 +252,7 @@ class QuestionFollower
   def initialize(options = {})
     @question_id, @user_id = options['question_id'], options['user_id']
   end
+
 end
 
 class Reply
@@ -243,6 +326,35 @@ class Reply
     SQL
     Reply.new(data)
   end
+
+  def attrs
+    { question_id: question_id, parent_id: parent_id, user_id: user_id, body: body }
+  end
+
+  def save
+    if @id
+      QuestionsDatabase.instance.execute(<<-SQL, attrs.merge({ id: id }))
+
+      UPDATE
+      replies
+      SET
+      question_id = :question_id, parent_id = :parent_id, user_id = :user_id, body = :body
+      WHERE
+      replies.id = :id
+      SQL
+
+    else
+      QuestionsDatabase.instance.execute(<<-SQL, attrs)
+
+      INSERT INTO
+      replies (question_id, parent_id, user_id, body)
+      VALUES
+      (:question_id, :parent_id, :user_id, :body)
+      SQL
+
+      @id = QuestionsDatabase.instance.last_insert_row_id
+    end
+  end
 end
 
 class QuestionLike
@@ -258,6 +370,7 @@ class QuestionLike
     WHERE
     l.question_id = ?
       SQL
+
     data.map {|datum| User.new(datum) }
   end
 
@@ -276,11 +389,53 @@ class QuestionLike
     data
   end
 
+  def self.liked_questions_for_user_id(user_id)
+    data = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+    SELECT DISTINCT
+      q.id, q.title, q.body, q.user_id
+    FROM
+      questions q
+    JOIN
+      question_likes l
+      ON (q.id = l.question_id)
+    WHERE
+      l.user_id = ?
+    SQL
+    data.map {|datum| Question.new(datum) }
+  end
+
+  def self.most_liked_questions(n)
+    data = QuestionsDatabase.instance.execute(<<-SQL, n)
+    SELECT
+      q.id, q.title, q.body, q.user_id
+    FROM
+      questions q
+      JOIN
+        question_likes l
+      ON (q.id = l.question_id)
+    GROUP BY
+      q.id
+    ORDER BY
+      COUNT(l.user_id) DESC LIMIT ?
+    SQL
+    data.map {|datum| Question.new(datum) }
+  end
+
   attr_accessor :question_id, :user_id
 
   def initialize(options = {})
     @question_id, @user_id = options['question_id'], options['user_id']
   end
-end
 
-p Question.find_by_id(1)
+  def likers
+    QuestionLike.likers_for_question_id(question_id)
+  end
+
+  def num_likes
+    QuestionLike.num_for_question_id(question_id)
+  end
+
+  def liked_questions
+    QuestionLike.liked_questions_for_user_id(user_id)
+  end
+end
