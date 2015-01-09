@@ -1,0 +1,17 @@
+<h1> Album's name is <%= @album.name %> </h2>
+
+  <ul>
+    <li>Album's name: <%= @album.name %></li>
+    <li>Album's type: <%= @album.album_type %></li>
+    <li>Album's band id: <%= @album.band_id %></li>
+  </ul>
+
+  <br>
+  <p><%= link_to "Go to Band's Page(#{@band.name})", band_url(@band) %></p>
+  <br>
+  <br>
+
+  <p><%= link_to "Edit #{@album.name}", edit_album_url(@album) %></p>
+  <p><%= link_to "Destroy #{@album.name}", album_url(@album), method: :delete %></p>
+
+  <p><%= link_to "Create a new Album", new_album_url %></p>

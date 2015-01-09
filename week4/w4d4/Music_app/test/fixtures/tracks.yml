@@ -1,13 +1,14 @@
 # == Schema Information
 #
-# Table name: users
+# Table name: tracks
 #
-#  id              :integer          not null, primary key
-#  email           :string(255)      not null
-#  password_digest :string(255)      not null
-#  session_token   :string(255)      not null
-#  created_at      :datetime
-#  updated_at      :datetime
+#  id         :integer          not null, primary key
+#  track_name :string(255)      not null
+#  album_id   :integer          not null
+#  track_type :string(255)      not null
+#  lyrics     :text
+#  created_at :datetime
+#  updated_at :datetime
 #
 
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
